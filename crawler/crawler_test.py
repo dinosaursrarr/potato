@@ -4,6 +4,7 @@ from typing import Callable, Dict, Optional
 import pytest
 
 import crawler
+import error_handler
 import fetcher
 import handler
 
@@ -31,8 +32,9 @@ def test_crawl_root():
     f = FakeFetcher({'root': 'foo'})
     processed = []
     h = FakeHandler(lambda page, callback: processed.append(page))
+    e = error_handler.ThrowingHandler()
 
-    crawler.Crawler(f, h, queue.Queue).crawl('root')
+    crawler.Crawler(f, h, e, queue.Queue).crawl('root')
 
     assert processed == ['foo']
 
@@ -52,8 +54,9 @@ def test_crawl_discovered_pages_bfs():
             callback('d')
 
     h = FakeHandler(handle)
+    e = error_handler.ThrowingHandler()
 
-    crawler.Crawler(f, h, queue.Queue).crawl('root')
+    crawler.Crawler(f, h, e, queue.Queue).crawl('root')
 
     assert processed == ['foo', 'bar', 'baz', 'qux', 'quux']
 
@@ -73,8 +76,9 @@ def test_crawl_discovered_pages_dfs():
             callback('d')
 
     h = FakeHandler(handle)
+    e = error_handler.ThrowingHandler()
 
-    crawler.Crawler(f, h, queue.LifoQueue).crawl('root')
+    crawler.Crawler(f, h, e, queue.LifoQueue).crawl('root')
 
     assert processed == ['foo', 'baz', 'quux', 'bar', 'qux']
 
@@ -98,8 +102,9 @@ def test_do_not_crawl_same_page_twice():
             callback('d')
 
     h = FakeHandler(handle)
+    e = error_handler.ThrowingHandler()
 
-    crawler.Crawler(f, h, queue.Queue).crawl('root')
+    crawler.Crawler(f, h, e, queue.Queue).crawl('root')
 
     assert processed == ['foo', 'bar', 'baz', 'qux', 'quux']
 
@@ -107,9 +112,10 @@ def test_do_not_crawl_same_page_twice():
 def test_error_fetching():
     f = FakeFetcher({}, ValueError('foo'))
     h = FakeHandler(lambda page, callback: None)
+    e = error_handler.ThrowingHandler()
 
     with pytest.raises(ValueError, match='foo'):
-        crawler.Crawler(f, h, queue.Queue).crawl('root')
+        crawler.Crawler(f, h, e, queue.Queue).crawl('root')
 
 
 def test_error_handling():
@@ -119,6 +125,7 @@ def test_error_handling():
         raise ValueError('bar')
 
     h = FakeHandler(handle)
+    e = error_handler.ThrowingHandler()
 
     with pytest.raises(ValueError, match='bar'):
-        crawler.Crawler(f, h, queue.Queue).crawl('root')
+        crawler.Crawler(f, h, e, queue.Queue).crawl('root')
