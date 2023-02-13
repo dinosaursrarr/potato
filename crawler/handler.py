@@ -13,9 +13,10 @@ class Handler(abc.ABC):
     """
 
     @abc.abstractmethod
-    def handle(self, page: str, enqueue_callback: Callable[[str], None]) -> None:
+    def handle(self, content: str, url: str, enqueue_callback: Callable[[str], None]) -> None:
         """
-        :param page: Raw content to be processed, as a string.
+        :param content: Raw content to be processed, as a string.
+        :param url: The URL of the content being processed.
         :param enqueue_callback: Callback to add a newly discovered URL to the crawl queue.
         """
         raise NotImplementedError('Cannot handle from abstract base class Handler')

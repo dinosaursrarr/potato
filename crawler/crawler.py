@@ -83,8 +83,8 @@ class Crawler:
             url = q.get()
             time.sleep(self.crawl_delay.total_seconds())
             try:
-                page = self.fetcher.fetch(url)
-                self.handler.handle(page, enqueue_fn)
+                content = self.fetcher.fetch(url)
+                self.handler.handle(content, url, enqueue_fn)
             except Exception as e:
                 self.error_handler.handle(e, Crawler._retry_fn(enqueue_fn, url))
             finally:
