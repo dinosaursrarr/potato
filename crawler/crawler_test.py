@@ -1,4 +1,6 @@
+import datetime
 import queue
+import time
 from typing import Callable, Dict, Optional
 
 import pytest
@@ -107,6 +109,28 @@ def test_do_not_crawl_same_page_twice():
     crawler.Crawler(f, h, e, queue.Queue).crawl('root')
 
     assert processed == ['foo', 'bar', 'baz', 'qux', 'quux']
+
+
+def test_crawl_delay():
+    f = FakeFetcher({'root': 'foo', 'a': 'bar', 'b': 'baz'})
+    processed = []
+
+    def handle(page: str, callback: Callable[[str], None]) -> None:
+        processed.append(page)
+        if page == 'foo':
+            callback('a')
+            callback('b')
+
+    h = FakeHandler(handle)
+    e = error_handler.ThrowingHandler()
+    crawl_delay = datetime.timedelta(seconds=0.25)
+
+    start = time.time()
+    crawler.Crawler(f, h, e, queue.Queue, crawl_delay=crawl_delay).crawl('root')
+    end = time.time()
+
+    assert len(processed) == 3
+    assert end - start > len(processed) * crawl_delay.total_seconds()
 
 
 def test_error_fetching():

@@ -1,4 +1,6 @@
+import datetime
 import queue
+import time
 from typing import Callable, Set
 
 import error_handler
@@ -15,19 +17,25 @@ class Crawler:
     handlers for fetching URLs, processing their content, and handling errors.
     """
 
-    def __init__(self, fetcher_impl: fetcher.Fetcher,
-                 handler_impl: handler.Handler, error_handler_impl: error_handler.ErrorHandler,
-                 queue_type: type[queue.Queue], retry_failures: bool = False):
+    def __init__(self,
+                 fetcher_impl: fetcher.Fetcher,
+                 handler_impl: handler.Handler,
+                 error_handler_impl: error_handler.ErrorHandler,
+                 queue_type: type[queue.Queue],
+                 crawl_delay: datetime.timedelta = datetime.timedelta(0),
+                 retry_failures: bool = False):
         """
         :param fetcher_impl: Fetcher to be used to fetch URLs.
         :param handler_impl: Handler to process fetched URLs.
         :param error_handler_impl: Determines how any errors raised during crawl are handled.
+        :param crawl_delay: Specifies how long to wait before making each request.
         :param queue_type: Use queue.Queue for BFS or queue.LifoQueue for DFS.
         """
         self.fetcher = fetcher_impl
         self.handler = handler_impl
         self.error_handler = error_handler_impl
         self.queue_type = queue_type
+        self.crawl_delay = crawl_delay
         self.retry_failures = retry_failures
 
     @staticmethod
@@ -71,9 +79,9 @@ class Crawler:
         enqueue_fn = Crawler._enqueue_fn(q, visited)
 
         # TODO: Multithreading to parallelize.
-        # TODO: Handle errors raised during crawl.
         while q.qsize() > 0:
             url = q.get()
+            time.sleep(self.crawl_delay.total_seconds())
             try:
                 page = self.fetcher.fetch(url)
                 self.handler.handle(page, enqueue_fn)
