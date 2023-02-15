@@ -41,7 +41,8 @@ class Crawler:
     @staticmethod
     def _enqueue_fn(q: queue.Queue, visited: Set[str]) -> Callable[[str], None]:
         """
-        Enqueues new URLs while ensuring we do not revisit pages seen already.
+        Enqueues new URLs while ensuring we do not revisit pages seen already. This
+        expects provided URLs to be absolute.
         :param q: Queue to which to add URLs.
         :param visited: Collection of URLs that have already been added to the queue.
         :return: Function that adds a URL to the queue if it has not been
