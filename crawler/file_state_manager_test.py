@@ -1,7 +1,7 @@
-import pytest
-
 import pathlib
 import queue
+
+import pytest
 
 from .file_state_manager import FileStateManager
 

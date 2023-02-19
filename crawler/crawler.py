@@ -1,10 +1,12 @@
 import datetime
 import queue
 import time
-from typing import Callable, Set
 import urllib.parse
+from typing import Callable, Set
 
-from . import error_handler, fetcher, handler
+from .error_handler import ErrorHandler
+from .fetcher import Fetcher
+from .handler import Handler
 
 
 class Crawler:
@@ -17,22 +19,22 @@ class Crawler:
     """
 
     def __init__(self,
-                 fetcher_impl: fetcher.Fetcher,
-                 handler_impl: handler.Handler,
-                 error_handler_impl: error_handler.ErrorHandler,
+                 fetcher: Fetcher,
+                 handler: Handler,
+                 error_handler: ErrorHandler,
                  queue_type: type[queue.Queue],
                  crawl_delay: datetime.timedelta = datetime.timedelta(0),
                  retry_failures: bool = False):
         """
-        :param fetcher_impl: Fetcher to be used to fetch URLs.
-        :param handler_impl: Handler to process fetched URLs.
-        :param error_handler_impl: Determines how any errors raised during crawl are handled.
+        :param fetcher: Fetcher to be used to fetch URLs.
+        :param handler: Handler to process fetched URLs.
+        :param error_handler: Determines how any errors raised during crawl are handled.
         :param crawl_delay: Specifies how long to wait before making each request.
         :param queue_type: Use queue.Queue for BFS or queue.LifoQueue for DFS.
         """
-        self.fetcher = fetcher_impl
-        self.handler = handler_impl
-        self.error_handler = error_handler_impl
+        self.fetcher = fetcher
+        self.handler = handler
+        self.error_handler = error_handler
         self.queue_type = queue_type
         self.crawl_delay = crawl_delay
         self.retry_failures = retry_failures

@@ -1,7 +1,7 @@
 import json
 import urllib.parse
 
-from . import view
+from .view import Handler
 
 
 def noop_callback(current_url: str, new_url: str) -> None:
@@ -14,7 +14,7 @@ def test_extract_name(tmp_path):
     output_dir = tmp_path / "name"
     output_dir.mkdir()
 
-    view.Handler(output_dir).handle(content, url, noop_callback)
+    Handler(output_dir).handle(content, url, noop_callback)
 
     with open(output_dir / "King%20Edward-E.json") as f:
         result = json.load(f)
@@ -27,7 +27,7 @@ def test_include_url(tmp_path):
     output_dir = tmp_path / "name"
     output_dir.mkdir()
 
-    view.Handler(output_dir).handle(content, url, noop_callback)
+    Handler(output_dir).handle(content, url, noop_callback)
 
     with open(output_dir / "King%20Edward-E.json") as f:
         result = json.load(f)
@@ -40,7 +40,7 @@ def test_extract_breed_info(tmp_path):
     output_dir = tmp_path / "name"
     output_dir.mkdir()
 
-    view.Handler(output_dir).handle(content, url, noop_callback)
+    Handler(output_dir).handle(content, url, noop_callback)
 
     with open(output_dir / "King%20Edward-E.json") as f:
         result = json.load(f)
@@ -60,7 +60,7 @@ def test_extract_tables(tmp_path):
     output_dir = tmp_path / "name"
     output_dir.mkdir()
 
-    view.Handler(output_dir).handle(content, url, noop_callback)
+    Handler(output_dir).handle(content, url, noop_callback)
 
     with open(output_dir / "King%20Edward-E.json") as f:
         result = json.load(f)
@@ -90,6 +90,6 @@ def test_enqueue_tab_links(tmp_path):
     def enqueue_callback(current_url: str, new_url: str) -> None:
         enqueued_urls.append(urllib.parse.urljoin(current_url, new_url))
 
-    view.Handler(output_dir).handle(content, page_url, enqueue_callback)
+    Handler(output_dir).handle(content, page_url, enqueue_callback)
 
     assert enqueued_urls == expected_urls

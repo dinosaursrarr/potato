@@ -1,9 +1,9 @@
 import requests
 
-from . import fetcher
+from .fetcher import Fetcher
 
 
-class HttpFetcher(fetcher.Fetcher):
+class HttpFetcher(Fetcher):
     """
     Fetches pages from URLs over HTTP or HTTPs.
     """

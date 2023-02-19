@@ -3,7 +3,7 @@ from typing import Callable, Set
 
 import pytest
 
-from . import router
+from .router import Handler
 
 
 def inspect_callback(container: Set[str]) -> Callable[[str, str], None]:
@@ -24,7 +24,7 @@ def inspect_callback(container: Set[str]) -> Callable[[str, str], None]:
 def test_index_router(url, tmp_path):
     content = open('europotato/varieties.html').read()
     handled_by: Set[str] = set()
-    router.Handler(output_root=tmp_path).handle(content, url, inspect_callback(handled_by))
+    Handler(output_root=tmp_path).handle(content, url, inspect_callback(handled_by))
 
     assert len(handled_by) == 1
     assert handled_by.pop().endswith('europotato/index.py')
@@ -75,7 +75,7 @@ def test_index_router(url, tmp_path):
 def test_pages_router(url, tmp_path):
     content = open('europotato/king_edward.html').read()
     handled_by: Set[str] = set()
-    router.Handler(output_root=tmp_path).handle(content, url, inspect_callback(handled_by))
+    Handler(output_root=tmp_path).handle(content, url, inspect_callback(handled_by))
 
     assert len(handled_by) == 1
     assert handled_by.pop().endswith('europotato/view.py')
@@ -97,4 +97,4 @@ def test_pages_router(url, tmp_path):
 )
 def test_unknown_url_pattern(url, tmp_path):
     with pytest.raises(NotImplementedError, match=f'No handler for URL: {url}'):
-        router.Handler(output_root=tmp_path).handle('', url, None)
+        Handler(output_root=tmp_path).handle('', url, None)

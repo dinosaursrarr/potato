@@ -1,6 +1,6 @@
 import pytest
 
-from . import error_handler
+from .error_handler import LoggingHandler, ThrowingHandler, RetryingHandler
 
 
 def noop_callback():
@@ -8,14 +8,12 @@ def noop_callback():
 
 
 def test_throwing():
-    h = error_handler.ThrowingHandler()
     with pytest.raises(ValueError, match='foo'):
-        h.handle(ValueError('foo'), noop_callback)
+        ThrowingHandler().handle(ValueError('foo'), noop_callback)
 
 
 def test_logging(caplog):
-    h = error_handler.LoggingHandler()
-    h.handle(ValueError('foo'), noop_callback)
+    LoggingHandler().handle(ValueError('foo'), noop_callback)
     assert 'foo' in caplog.text
 
 
@@ -25,8 +23,7 @@ def test_retrying(caplog):
     def callback() -> None:
         output.append('bar')
 
-    h = error_handler.RetryingHandler(error_handler.LoggingHandler())
-    h.handle(ValueError('foo'), callback)
+    RetryingHandler(LoggingHandler()).handle(ValueError('foo'), callback)
 
     assert output == ['bar']
     assert 'foo' in caplog.text

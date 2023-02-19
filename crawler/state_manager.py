@@ -9,6 +9,7 @@ class StateManager(abc.ABC):
      - pop_next() when it is time to be crawled.
      - mark_completed() after it has been crawled.
     """
+
     def enqueue(self, url: str) -> None:
         """
         Adds url to the list of URLs to be crawled.

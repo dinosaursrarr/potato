@@ -5,10 +5,13 @@ from typing import Callable, Dict, Optional
 
 import pytest
 
-from . import crawler, error_handler, fetcher, handler
+from .crawler import Crawler
+from .error_handler import ThrowingHandler
+from .fetcher import Fetcher
+from .handler import Handler
 
 
-class FakeFetcher(fetcher.Fetcher):
+class FakeFetcher(Fetcher):
     def __init__(self, return_values: Dict[str, str], error: Optional[Exception] = None):
         self.return_values = return_values
         self.error = error
@@ -19,7 +22,7 @@ class FakeFetcher(fetcher.Fetcher):
         return self.return_values[url]
 
 
-class FakeHandler(handler.Handler):
+class FakeHandler(Handler):
     def __init__(self, action: Callable[[str, str, Callable[[str, str], None]], None]):
         self.action = action
 
@@ -31,9 +34,8 @@ def test_crawl_root():
     f = FakeFetcher({'root': 'foo'})
     processed = []
     h = FakeHandler(lambda content, url, callback: processed.append(f'{url}: {content}'))
-    e = error_handler.ThrowingHandler()
 
-    crawler.Crawler(f, h, e, queue.Queue).crawl('root')
+    Crawler(f, h, ThrowingHandler(), queue.Queue).crawl('root')
 
     assert processed == ['root: foo']
 
@@ -52,10 +54,7 @@ def test_crawl_discovered_pages_bfs():
         elif content == 'baz':
             callback('', 'd')
 
-    h = FakeHandler(handle)
-    e = error_handler.ThrowingHandler()
-
-    crawler.Crawler(f, h, e, queue.Queue).crawl('root')
+    Crawler(f, FakeHandler(handle), ThrowingHandler(), queue.Queue).crawl('root')
 
     assert processed == ['root: foo', 'a: bar', 'b: baz', 'c: qux', 'd: quux']
 
@@ -74,17 +73,15 @@ def test_crawl_discovered_pages_dfs():
         elif content == 'baz':
             callback('', 'd')
 
-    h = FakeHandler(handle)
-    e = error_handler.ThrowingHandler()
-
-    crawler.Crawler(f, h, e, queue.LifoQueue).crawl('root')
+    Crawler(f, FakeHandler(handle), ThrowingHandler(), queue.LifoQueue).crawl('root')
 
     assert processed == ['root: foo', 'b: baz', 'd: quux', 'a: bar', 'c: qux']
 
 
 def test_resolve_relative_urls():
-    f = FakeFetcher({'http://root.com/': 'foo', 'http://root.com/a': 'bar', 'http://root.com/b/': 'baz', 'http://root.com/c': 'qux',
-                     'http://root.com/b/d': 'quux', 'http://root.com/e': 'eranu'})
+    f = FakeFetcher(
+        {'http://root.com/': 'foo', 'http://root.com/a': 'bar', 'http://root.com/b/': 'baz', 'http://root.com/c': 'qux',
+         'http://root.com/b/d': 'quux', 'http://root.com/e': 'eranu'})
     processed = []
 
     def handle(content: str, url: str, callback: Callable[[str, str], None]) -> None:
@@ -98,10 +95,7 @@ def test_resolve_relative_urls():
             callback('http://root.com/b/', 'd')
             callback('http://root.com/b/', '/e')
 
-    h = FakeHandler(handle)
-    e = error_handler.ThrowingHandler()
-
-    crawler.Crawler(f, h, e, queue.Queue).crawl('http://root.com/')
+    Crawler(f, FakeHandler(handle), ThrowingHandler(), queue.Queue).crawl('http://root.com/')
 
     assert processed == ['http://root.com/: foo',
                          'http://root.com/a: bar',
@@ -129,10 +123,7 @@ def test_do_not_crawl_same_page_twice():
             callback('', 'b')
             callback('', 'd')
 
-    h = FakeHandler(handle)
-    e = error_handler.ThrowingHandler()
-
-    crawler.Crawler(f, h, e, queue.Queue).crawl('root')
+    Crawler(f, FakeHandler(handle), ThrowingHandler(), queue.Queue).crawl('root')
 
     assert processed == ['root: foo', 'a: bar', 'b: baz', 'c: qux', 'd: quux']
 
@@ -147,12 +138,10 @@ def test_crawl_delay():
             callback('', 'a')
             callback('', 'b')
 
-    h = FakeHandler(handle)
-    e = error_handler.ThrowingHandler()
     crawl_delay = datetime.timedelta(seconds=0.25)
 
     start = time.time()
-    crawler.Crawler(f, h, e, queue.Queue, crawl_delay=crawl_delay).crawl('root')
+    Crawler(f, FakeHandler(handle), ThrowingHandler(), queue.Queue, crawl_delay=crawl_delay).crawl('root')
     end = time.time()
 
     assert len(processed) == 3
@@ -162,10 +151,9 @@ def test_crawl_delay():
 def test_error_fetching():
     f = FakeFetcher({}, ValueError('foo'))
     h = FakeHandler(lambda page, url, callback: None)
-    e = error_handler.ThrowingHandler()
 
     with pytest.raises(ValueError, match='foo'):
-        crawler.Crawler(f, h, e, queue.Queue).crawl('root')
+        Crawler(f, h, ThrowingHandler(), queue.Queue).crawl('root')
 
 
 def test_error_handling():
@@ -174,8 +162,5 @@ def test_error_handling():
     def handle(page: str, url: str, callback: Callable[[str, str], None]) -> None:
         raise ValueError('bar')
 
-    h = FakeHandler(handle)
-    e = error_handler.ThrowingHandler()
-
     with pytest.raises(ValueError, match='bar'):
-        crawler.Crawler(f, h, e, queue.Queue).crawl('root')
+        Crawler(f, FakeHandler(handle), ThrowingHandler(), queue.Queue).crawl('root')

@@ -1,6 +1,6 @@
 import urllib.parse
 
-from . import index
+from .index import Handler
 
 
 def test_extract_links_to_varieties():
@@ -48,7 +48,7 @@ def test_extract_links_to_varieties():
     def callback(current_url, new_url: str) -> None:
         extracted_urls.add(urllib.parse.urljoin(current_url, new_url))
 
-    index.Handler().handle(content, root, callback)
+    Handler().handle(content, root, callback)
 
     assert set(expected_urls).issubset(extracted_urls)
 
@@ -99,7 +99,7 @@ def test_extract_links_to_letters():
     def callback(current_url, new_url: str) -> None:
         extracted_urls.add(urllib.parse.urljoin(current_url, new_url))
 
-    index.Handler().handle(content, root, callback)
+    Handler().handle(content, root, callback)
 
     assert set(expected_urls).issubset(extracted_urls)
 
@@ -124,6 +124,6 @@ def test_extract_links_to_pages():
     def callback(current_url, new_url: str) -> None:
         extracted_urls.add(urllib.parse.urljoin(current_url, new_url))
 
-    index.Handler().handle(content, root, callback)
+    Handler().handle(content, root, callback)
 
     assert set(expected_urls).issubset(extracted_urls)

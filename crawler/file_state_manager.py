@@ -1,14 +1,15 @@
 import pathlib
 import queue
 
-from . import state_manager
+from .state_manager import StateManager
 
 
-class FileStateManager(state_manager.StateManager):
+class FileStateManager(StateManager):
     """
     Maintains crawl state using in-memory collections, which are also written to
     log files with one URL per line. This allows resuming the crawl if interrupted.
     """
+
     def __init__(self, queue_type: type[queue.Queue], visited_path: pathlib.Path, queue_path: pathlib.Path):
         self._visited = set()
         self._queue = queue_type()
