@@ -1,12 +1,12 @@
 import datetime
-import queue
 import time
 import urllib.parse
-from typing import Callable, Set
+from typing import Callable
 
 from .error_handler import ErrorHandler
 from .fetcher import Fetcher
 from .handler import Handler
+from .state_manager import StateManager
 
 
 class Crawler:
@@ -21,50 +21,40 @@ class Crawler:
     def __init__(self,
                  fetcher: Fetcher,
                  handler: Handler,
+                 state_manager: StateManager,
                  error_handler: ErrorHandler,
-                 queue_type: type[queue.Queue],
-                 crawl_delay: datetime.timedelta = datetime.timedelta(0),
-                 retry_failures: bool = False):
+                 crawl_delay: datetime.timedelta = datetime.timedelta(0)):
         """
         :param fetcher: Fetcher to be used to fetch URLs.
         :param handler: Handler to process fetched URLs.
+        :param state_manager: Manages the crawl queue.
         :param error_handler: Determines how any errors raised during crawl are handled.
         :param crawl_delay: Specifies how long to wait before making each request.
-        :param queue_type: Use queue.Queue for BFS or queue.LifoQueue for DFS.
         """
         self.fetcher = fetcher
         self.handler = handler
+        self.state_manager = state_manager
         self.error_handler = error_handler
-        self.queue_type = queue_type
         self.crawl_delay = crawl_delay
-        self.retry_failures = retry_failures
 
-    @staticmethod
-    def _enqueue_fn(q: queue.Queue, visited: Set[str]) -> Callable[[str, str], None]:
+    def _enqueue_fn(self) -> Callable[[str, str], None]:
         """
-        Enqueues new URLs while ensuring we do not revisit pages seen already. This
-        expects provided URLs to be absolute.
-        :param q: Queue to which to add URLs.
-        :param visited: Collection of URLs that have already been added to the queue.
-        :return: Function that adds a URL to the queue if it has not been
-        seen before.
+        Enqueues new URLs while ensuring we do not revisit pages seen already. URLs can be
+        relative to the current URL, or absolute.
+        :return: Function that adds a URL to the queue if it has not been seen before.
         """
 
         def put_fn(current_url, new_url: str) -> None:
             # Resolves relative URLs relative to the current URL. If new_url is
             # absolute, then current_url will be ignored.
             url = urllib.parse.urljoin(current_url, new_url)
-            if url in visited:
-                return
-            visited.add(url)
-            q.put(url)
+            self.state_manager.enqueue(url)
 
         return put_fn
 
-    @staticmethod
-    def _retry_fn(enqueue_fn: Callable[[str, str], None], url: str) -> Callable[[], None]:
+    def _retry_fn(self, url: str) -> Callable[[], None]:
         def retry_fn() -> None:
-            return enqueue_fn('', url)
+            return self._enqueue_fn()('', url)
 
         return retry_fn
 
@@ -74,23 +64,18 @@ class Crawler:
         no more pages to discover.
         :param root: URL from which to begin crawling
         """
-        q = self.queue_type()
-        visited = set()
 
         # TODO: Check constraints from robot.txt before starting.
-        q.put(root)
-        visited.add(root)
-
-        enqueue_fn = Crawler._enqueue_fn(q, visited)
+        self.state_manager.enqueue(root)
 
         # TODO: Multithreading to parallelize.
-        while q.qsize() > 0:
-            url = q.get()
+        while not self.state_manager.is_finished():
+            url = self.state_manager.pop_next()
             time.sleep(self.crawl_delay.total_seconds())
             try:
                 content = self.fetcher.fetch(url)
-                self.handler.handle(content, url, enqueue_fn)
+                self.handler.handle(content, url, self._enqueue_fn())
             except Exception as e:
-                self.error_handler.handle(e, Crawler._retry_fn(enqueue_fn, url))
+                self.error_handler.handle(e, self._retry_fn(url))
             finally:
-                q.task_done()
+                self.state_manager.mark_completed(url)

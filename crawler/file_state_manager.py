@@ -29,6 +29,9 @@ class FileStateManager(StateManager):
             print(f'No existing queue file at {queue_path}')
             self._queue_file = open(queue_path, 'w')
 
+    def is_finished(self) -> bool:
+        return self._queue.qsize() == 0
+
     def enqueue(self, url: str) -> None:
         if url in self._visited:
             return

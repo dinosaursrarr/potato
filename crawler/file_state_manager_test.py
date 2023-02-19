@@ -22,6 +22,24 @@ def test_pop_empty(tmp_path):
         m.pop_next()
 
 
+def test_is_finished_empty_queue(tmp_path):
+    m = FileStateManager(queue.Queue, tmp_path / "visited.log", tmp_path / "queue.log")
+    assert m.is_finished()
+
+
+def test_not_finished_nonempty_queue(tmp_path):
+    m = FileStateManager(queue.Queue, tmp_path / "visited.log", tmp_path / "queue.log")
+    m.enqueue('a')
+    assert not m.is_finished()
+
+
+def test_finished_queue_empty_again(tmp_path):
+    m = FileStateManager(queue.Queue, tmp_path / "visited.log", tmp_path / "queue.log")
+    m.enqueue('a')
+    m.pop_next()
+    assert m.is_finished()
+
+
 def test_enqueue_and_pop(tmp_path):
     m = FileStateManager(queue.Queue, tmp_path / "visited.log", tmp_path / "queue.log")
     m.enqueue('a')

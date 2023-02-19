@@ -9,6 +9,12 @@ class StateManager(abc.ABC):
      - pop_next() when it is time to be crawled.
      - mark_completed() after it has been crawled.
     """
+    def is_finished(self) -> bool:
+        """
+        Lets us know when all the work is finished.
+        :return: True when there is nothing left to crawl, False otherwise.
+        """
+        raise NotImplementedError('Cannot call is_finished on abstract base class Checkpointer')
 
     def enqueue(self, url: str) -> None:
         """
