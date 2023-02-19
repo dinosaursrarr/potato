@@ -13,7 +13,7 @@ class Handler(handler.Handler):
     def __init__(self, output_root: str):
         self.output_root = output_root
 
-    def handle(self, content: str, url: str, enqueue_callback: Callable[[str], None]) -> None:
+    def handle(self, content: str, url: str, enqueue_callback: Callable[[str, str], None]) -> None:
         if url.startswith('https://www.europotato.org/varieties/index'):
             index.Handler().handle(content, url, enqueue_callback)
             return

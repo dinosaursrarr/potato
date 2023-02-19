@@ -6,8 +6,8 @@ import pytest
 from . import router
 
 
-def inspect_callback(container: Set[str]) -> Callable[[str], None]:
-    def enqueue_fn(url: str):
+def inspect_callback(container: Set[str]) -> Callable[[str, str], None]:
+    def enqueue_fn(current_url: str, new_url: str):
         container.add(inspect.stack()[1].filename)
 
     return enqueue_fn

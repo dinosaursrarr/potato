@@ -2,6 +2,7 @@ import datetime
 import queue
 import time
 from typing import Callable, Set
+import urllib.parse
 
 from . import error_handler, fetcher, handler
 
@@ -37,7 +38,7 @@ class Crawler:
         self.retry_failures = retry_failures
 
     @staticmethod
-    def _enqueue_fn(q: queue.Queue, visited: Set[str]) -> Callable[[str], None]:
+    def _enqueue_fn(q: queue.Queue, visited: Set[str]) -> Callable[[str, str], None]:
         """
         Enqueues new URLs while ensuring we do not revisit pages seen already. This
         expects provided URLs to be absolute.
@@ -47,7 +48,10 @@ class Crawler:
         seen before.
         """
 
-        def put_fn(url: str) -> None:
+        def put_fn(current_url, new_url: str) -> None:
+            # Resolves relative URLs relative to the current URL. If new_url is
+            # absolute, then current_url will be ignored.
+            url = urllib.parse.urljoin(current_url, new_url)
             if url in visited:
                 return
             visited.add(url)
@@ -56,9 +60,9 @@ class Crawler:
         return put_fn
 
     @staticmethod
-    def _retry_fn(enqueue_fn: Callable[[str], None], url: str) -> Callable[[], None]:
+    def _retry_fn(enqueue_fn: Callable[[str, str], None], url: str) -> Callable[[], None]:
         def retry_fn() -> None:
-            return enqueue_fn(url)
+            return enqueue_fn('', url)
 
         return retry_fn
 

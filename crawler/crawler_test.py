@@ -20,10 +20,10 @@ class FakeFetcher(fetcher.Fetcher):
 
 
 class FakeHandler(handler.Handler):
-    def __init__(self, action: Callable[[str, str, Callable[[str], None]], None]):
+    def __init__(self, action: Callable[[str, str, Callable[[str, str], None]], None]):
         self.action = action
 
-    def handle(self, content: str, url: str, enqueue_callback: Callable[[str], None]) -> None:
+    def handle(self, content: str, url: str, enqueue_callback: Callable[[str, str], None]) -> None:
         self.action(content, url, enqueue_callback)
 
 
@@ -42,15 +42,15 @@ def test_crawl_discovered_pages_bfs():
     f = FakeFetcher({'root': 'foo', 'a': 'bar', 'b': 'baz', 'c': 'qux', 'd': 'quux'})
     processed = []
 
-    def handle(content: str, url: str, callback: Callable[[str], None]) -> None:
+    def handle(content: str, url: str, callback: Callable[[str, str], None]) -> None:
         processed.append(f'{url}: {content}')
         if content == 'foo':
-            callback('a')
-            callback('b')
+            callback('', 'a')
+            callback('', 'b')
         elif content == 'bar':
-            callback('c')
+            callback('', 'c')
         elif content == 'baz':
-            callback('d')
+            callback('', 'd')
 
     h = FakeHandler(handle)
     e = error_handler.ThrowingHandler()
@@ -64,15 +64,15 @@ def test_crawl_discovered_pages_dfs():
     f = FakeFetcher({'root': 'foo', 'a': 'bar', 'b': 'baz', 'c': 'qux', 'd': 'quux'})
     processed = []
 
-    def handle(content: str, url: str, callback: Callable[[str], None]) -> None:
+    def handle(content: str, url: str, callback: Callable[[str, str], None]) -> None:
         processed.append(f'{url}: {content}')
         if content == 'foo':
-            callback('a')
-            callback('b')
+            callback('', 'a')
+            callback('', 'b')
         elif content == 'bar':
-            callback('c')
+            callback('', 'c')
         elif content == 'baz':
-            callback('d')
+            callback('', 'd')
 
     h = FakeHandler(handle)
     e = error_handler.ThrowingHandler()
@@ -82,23 +82,52 @@ def test_crawl_discovered_pages_dfs():
     assert processed == ['root: foo', 'b: baz', 'd: quux', 'a: bar', 'c: qux']
 
 
+def test_resolve_relative_urls():
+    f = FakeFetcher({'http://root.com/': 'foo', 'http://root.com/a': 'bar', 'http://root.com/b/': 'baz', 'http://root.com/c': 'qux',
+                     'http://root.com/b/d': 'quux', 'http://root.com/e': 'eranu'})
+    processed = []
+
+    def handle(content: str, url: str, callback: Callable[[str, str], None]) -> None:
+        processed.append(f'{url}: {content}')
+        if content == 'foo':
+            callback('http://root.com/', 'a')
+            callback('http://root.com/', 'b/')
+        elif content == 'bar':
+            callback('http://root.com/a', 'c')
+        elif content == 'baz':
+            callback('http://root.com/b/', 'd')
+            callback('http://root.com/b/', '/e')
+
+    h = FakeHandler(handle)
+    e = error_handler.ThrowingHandler()
+
+    crawler.Crawler(f, h, e, queue.Queue).crawl('http://root.com/')
+
+    assert processed == ['http://root.com/: foo',
+                         'http://root.com/a: bar',
+                         'http://root.com/b/: baz',
+                         'http://root.com/c: qux',
+                         'http://root.com/b/d: quux',
+                         'http://root.com/e: eranu']
+
+
 def test_do_not_crawl_same_page_twice():
     f = FakeFetcher({'root': 'foo', 'a': 'bar', 'b': 'baz', 'c': 'qux', 'd': 'quux'})
     processed = []
 
-    def handle(content: str, url: str, callback: Callable[[str], None]) -> None:
+    def handle(content: str, url: str, callback: Callable[[str, str], None]) -> None:
         processed.append(f'{url}: {content}')
         if content == 'foo':
-            callback('root')
-            callback('a')
-            callback('b')
+            callback('', 'root')
+            callback('', 'a')
+            callback('', 'b')
         elif content == 'bar':
-            callback('a')
-            callback('c')
+            callback('', 'a')
+            callback('', 'c')
         elif content == 'baz':
-            callback('a')
-            callback('b')
-            callback('d')
+            callback('', 'a')
+            callback('', 'b')
+            callback('', 'd')
 
     h = FakeHandler(handle)
     e = error_handler.ThrowingHandler()
@@ -112,11 +141,11 @@ def test_crawl_delay():
     f = FakeFetcher({'root': 'foo', 'a': 'bar', 'b': 'baz'})
     processed = []
 
-    def handle(content: str, url: str, callback: Callable[[str], None]) -> None:
+    def handle(content: str, url: str, callback: Callable[[str, str], None]) -> None:
         processed.append(f'{url}: {content}')
         if content == 'foo':
-            callback('a')
-            callback('b')
+            callback('', 'a')
+            callback('', 'b')
 
     h = FakeHandler(handle)
     e = error_handler.ThrowingHandler()
@@ -142,7 +171,7 @@ def test_error_fetching():
 def test_error_handling():
     f = FakeFetcher({'root': 'foo'})
 
-    def handle(page: str, url: str, callback: Callable[[str], None]) -> None:
+    def handle(page: str, url: str, callback: Callable[[str, str], None]) -> None:
         raise ValueError('bar')
 
     h = FakeHandler(handle)

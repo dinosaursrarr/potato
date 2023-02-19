@@ -13,7 +13,7 @@ class Handler(abc.ABC):
     """
 
     @abc.abstractmethod
-    def handle(self, content: str, url: str, enqueue_callback: Callable[[str], None]) -> None:
+    def handle(self, content: str, url: str, enqueue_callback: Callable[[str, str], None]) -> None:
         """
         :param content: Raw content to be processed, as a string.
         :param url: The URL of the content being processed.

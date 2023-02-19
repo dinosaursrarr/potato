@@ -73,7 +73,7 @@ class Handler(handler.Handler):
     variety of potato. Data is written as json to files named for the url. 
     """
 
-    def handle(self, content: str, url: str, enqueue_callback: Callable[[str], None]) -> None:
+    def handle(self, content: str, url: str, enqueue_callback: Callable[[str, str], None]) -> None:
         # Collect information in a dict, which we will dump to JSON.
         variety = {
             'url': url,
@@ -97,7 +97,7 @@ class Handler(handler.Handler):
 
         tab_links = Handler._extract_tab_links(doc)
         for tab_link in tab_links:
-            enqueue_callback(urllib.parse.urljoin(url, tab_link))
+            enqueue_callback(url, tab_link)
 
         output_path = self.output_root / f'{Handler._output_filename(url)}.json'
         with open(output_path, 'w') as f:

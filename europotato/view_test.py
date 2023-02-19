@@ -1,9 +1,10 @@
 import json
+import urllib.parse
 
 from . import view
 
 
-def noop_callback(url: str) -> None:
+def noop_callback(current_url: str, new_url: str) -> None:
     pass
 
 
@@ -86,8 +87,8 @@ def test_enqueue_tab_links(tmp_path):
     ]
     enqueued_urls = []
 
-    def enqueue_callback(url: str) -> None:
-        enqueued_urls.append(url)
+    def enqueue_callback(current_url: str, new_url: str) -> None:
+        enqueued_urls.append(urllib.parse.urljoin(current_url, new_url))
 
     view.Handler(output_dir).handle(content, page_url, enqueue_callback)
 

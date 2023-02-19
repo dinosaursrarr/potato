@@ -45,8 +45,8 @@ def test_extract_links_to_varieties():
     extracted_urls = set()
     root = 'https://www.europotato.org/varieties/index'
 
-    def callback(url: str) -> None:
-        extracted_urls.add(urllib.parse.urljoin(root, url))
+    def callback(current_url, new_url: str) -> None:
+        extracted_urls.add(urllib.parse.urljoin(current_url, new_url))
 
     index.Handler().handle(content, root, callback)
 
@@ -96,8 +96,8 @@ def test_extract_links_to_letters():
     extracted_urls = set()
     root = 'https://www.europotato.org/varieties/index'
 
-    def callback(url: str) -> None:
-        extracted_urls.add(urllib.parse.urljoin(root, url))
+    def callback(current_url, new_url: str) -> None:
+        extracted_urls.add(urllib.parse.urljoin(current_url, new_url))
 
     index.Handler().handle(content, root, callback)
 
@@ -121,8 +121,8 @@ def test_extract_links_to_pages():
     extracted_urls = set()
     root = 'https://www.europotato.org/varieties/index'
 
-    def callback(url: str) -> None:
-        extracted_urls.add(urllib.parse.urljoin(root, url))
+    def callback(current_url, new_url: str) -> None:
+        extracted_urls.add(urllib.parse.urljoin(current_url, new_url))
 
     index.Handler().handle(content, root, callback)
 
