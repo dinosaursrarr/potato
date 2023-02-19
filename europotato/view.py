@@ -5,10 +5,10 @@ from typing import Callable, List, Optional
 
 import bs4
 
-import crawler
+from crawler import handler
 
 
-class Handler(crawler.handler.Handler):
+class Handler(handler.Handler):
     def __init__(self, output_root: pathlib.Path):
         self.output_root = output_root
 

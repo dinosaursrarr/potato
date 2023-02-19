@@ -1,6 +1,6 @@
 import requests
 
-import fetcher
+from . import fetcher
 
 
 class HttpFetcher(fetcher.Fetcher):

@@ -3,7 +3,7 @@ import pytest_httpbin
 import pytest_httpbin.certs
 import requests
 
-import http_fetcher
+from . import http_fetcher
 
 
 def test_fetch_http(httpbin):

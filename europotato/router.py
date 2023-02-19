@@ -1,11 +1,10 @@
 from typing import Callable
 
-import crawler
-import index
-import view
+from crawler import handler
+from . import index, view
 
 
-class Handler(crawler.handler.Handler):
+class Handler(handler.Handler):
     """
     Routes pages from europotato.org to appropriate handlers for their templates, based
     on their URLs.

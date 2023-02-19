@@ -3,10 +3,10 @@ from typing import Callable
 
 import bs4
 
-import crawler
+from crawler import handler
 
 
-class Handler(crawler.handler.Handler):
+class Handler(handler.Handler):
     """
     Handles index pages from europotato.org. These contain links to other index pages,
     and to pages with details about specific varieties.

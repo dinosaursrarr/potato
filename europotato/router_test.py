@@ -3,7 +3,7 @@ from typing import Callable, Set
 
 import pytest
 
-import router
+from . import router
 
 
 def inspect_callback(container: Set[str]) -> Callable[[str], None]:

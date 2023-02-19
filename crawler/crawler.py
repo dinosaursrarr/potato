@@ -3,9 +3,7 @@ import queue
 import time
 from typing import Callable, Set
 
-import error_handler
-import fetcher
-import handler
+from . import error_handler, fetcher, handler
 
 
 class Crawler:

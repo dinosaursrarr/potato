@@ -1,6 +1,6 @@
 import urllib.parse
 
-import index
+from . import index
 
 
 def test_extract_links_to_varieties():

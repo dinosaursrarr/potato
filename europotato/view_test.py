@@ -1,6 +1,6 @@
 import json
 
-import view
+from . import view
 
 
 def noop_callback(url: str) -> None:

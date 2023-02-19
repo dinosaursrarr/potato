@@ -1,6 +1,6 @@
 import pytest
 
-import error_handler
+from . import error_handler
 
 
 def noop_callback():

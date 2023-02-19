@@ -5,10 +5,7 @@ from typing import Callable, Dict, Optional
 
 import pytest
 
-import crawler
-import error_handler
-import fetcher
-import handler
+from . import crawler, error_handler, fetcher, handler
 
 
 class FakeFetcher(fetcher.Fetcher):
