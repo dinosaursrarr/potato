@@ -1,10 +1,12 @@
-from typing import Callable, List, Optional
-import bs4
 import json
 import pathlib
 import urllib.parse
+from typing import Callable, List, Optional
+
+import bs4
 
 import crawler
+
 
 class Handler(crawler.handler.Handler):
     def __init__(self, output_root: pathlib.Path):
@@ -70,6 +72,7 @@ class Handler(crawler.handler.Handler):
     Handles detail pages from europotato.org. These contain details about a given
     variety of potato. Data is written as json to files named for the url. 
     """
+
     def handle(self, content: str, url: str, enqueue_callback: Callable[[str], None]) -> None:
         # Collect information in a dict, which we will dump to JSON.
         variety = {

@@ -1,6 +1,7 @@
-from typing import Callable
-import bs4
 import urllib.parse
+from typing import Callable
+
+import bs4
 
 import crawler
 
@@ -10,6 +11,7 @@ class Handler(crawler.handler.Handler):
     Handles index pages from europotato.org. These contain links to other index pages,
     and to pages with details about specific varieties.
     """
+
     def handle(self, content: str, url: str, enqueue_callback: Callable[[str], None]) -> None:
         doc = bs4.BeautifulSoup(content, 'html.parser')
 
@@ -27,4 +29,3 @@ class Handler(crawler.handler.Handler):
         paging = doc.find('div', class_='paging')
         for page in paging.findAll('a'):
             enqueue_callback(urllib.parse.urljoin(url, page['href']))
-

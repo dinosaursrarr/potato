@@ -1,4 +1,3 @@
-import pytest
 import urllib.parse
 
 import index
@@ -50,6 +49,8 @@ def test_extract_links_to_varieties():
         extracted_urls.add(urllib.parse.urljoin(root, url))
 
     index.Handler().handle(content, root, callback)
+
+    assert set(expected_urls).issubset(extracted_urls)
 
 
 def test_extract_links_to_letters():
