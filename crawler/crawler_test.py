@@ -60,7 +60,7 @@ def test_crawl_root():
     processed = []
     h = FakeHandler(lambda content, url, callback: processed.append(f'{url}: {content}'))
 
-    Crawler(f, h, FakeStateManager(), ThrowingHandler()).crawl('root')
+    Crawler(f, h, FakeStateManager(), ThrowingHandler()).crawl(['root'])
 
     assert processed == ['root: foo']
 
@@ -79,7 +79,7 @@ def test_crawl_discovered_pages_bfs():
         elif content == 'baz':
             callback('', 'd')
 
-    Crawler(f, FakeHandler(handle), FakeStateManager(), ThrowingHandler()).crawl('root')
+    Crawler(f, FakeHandler(handle), FakeStateManager(), ThrowingHandler()).crawl(['root'])
 
     assert processed == ['root: foo', 'a: bar', 'b: baz', 'c: qux', 'd: quux']
 
@@ -98,7 +98,7 @@ def test_crawl_discovered_pages_dfs():
         elif content == 'baz':
             callback('', 'd')
 
-    Crawler(f, FakeHandler(handle), FakeStateManager(queue.LifoQueue), ThrowingHandler()).crawl('root')
+    Crawler(f, FakeHandler(handle), FakeStateManager(queue.LifoQueue), ThrowingHandler()).crawl(['root'])
 
     assert processed == ['root: foo', 'b: baz', 'd: quux', 'a: bar', 'c: qux']
 
@@ -120,7 +120,7 @@ def test_resolve_relative_urls():
             callback('http://root.com/b/', 'd')
             callback('http://root.com/b/', '/e')
 
-    Crawler(f, FakeHandler(handle), FakeStateManager(), ThrowingHandler()).crawl('http://root.com/')
+    Crawler(f, FakeHandler(handle), FakeStateManager(), ThrowingHandler()).crawl(['http://root.com/'])
 
     assert processed == ['http://root.com/: foo',
                          'http://root.com/a: bar',
@@ -143,7 +143,7 @@ def test_crawl_delay():
     crawl_delay = datetime.timedelta(seconds=0.25)
 
     start = time.time()
-    Crawler(f, FakeHandler(handle), FakeStateManager(), ThrowingHandler(), crawl_delay=crawl_delay).crawl('root')
+    Crawler(f, FakeHandler(handle), FakeStateManager(), ThrowingHandler(), crawl_delay=crawl_delay).crawl(['root'])
     end = time.time()
 
     assert len(processed) == 3
@@ -155,7 +155,7 @@ def test_error_fetching():
     h = FakeHandler(lambda page, url, callback: None)
 
     with pytest.raises(ValueError, match='foo'):
-        Crawler(f, h, FakeStateManager(), ThrowingHandler()).crawl('root')
+        Crawler(f, h, FakeStateManager(), ThrowingHandler()).crawl(['root'])
 
 
 def test_error_handling():
@@ -165,7 +165,7 @@ def test_error_handling():
         raise ValueError('bar')
 
     with pytest.raises(ValueError, match='bar'):
-        Crawler(f, FakeHandler(handle), FakeStateManager(), ThrowingHandler()).crawl('root')
+        Crawler(f, FakeHandler(handle), FakeStateManager(), ThrowingHandler()).crawl(['root'])
 
 
 class EventualFetcher(Fetcher):
@@ -186,7 +186,7 @@ def test_retry_failures():
     f = EventualFetcher(failures=3)
     m = FakeStateManager(max_failures=3)
 
-    Crawler(f, h, m, RetryingHandler(LoggingHandler())).crawl('root')
+    Crawler(f, h, m, RetryingHandler(LoggingHandler())).crawl(['root'])
 
     assert processed == ['root: foo']
 
@@ -197,6 +197,6 @@ def test_exhaust_failures():
     f = EventualFetcher(failures=2)
     m = FakeStateManager(max_failures=1)
 
-    Crawler(f, h, m, RetryingHandler(LoggingHandler())).crawl('root')
+    Crawler(f, h, m, RetryingHandler(LoggingHandler())).crawl(['root'])
 
     assert processed == []

@@ -1,7 +1,7 @@
 import datetime
 import time
 import urllib.parse
-from typing import Callable
+from typing import Callable, List
 
 from .error_handler import ErrorHandler
 from .fetcher import Fetcher
@@ -58,15 +58,16 @@ class Crawler:
 
         return retry_fn
 
-    def crawl(self, root: str) -> None:
+    def crawl(self, roots: List[str]) -> None:
         """
         Initiates a crawl beginning at a given URL and continuing until there are
         no more pages to discover.
-        :param root: URL from which to begin crawling
+        :param roots: URLs from which to begin crawling
         """
 
         # TODO: Check constraints from robot.txt before starting.
-        self.state_manager.enqueue(root)
+        for root in roots:
+            self.state_manager.enqueue(root)
 
         # TODO: Multithreading to parallelize.
         while not self.state_manager.is_finished():

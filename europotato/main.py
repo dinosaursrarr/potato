@@ -39,7 +39,7 @@ def main(argv):
 
     c = Crawler(HttpFetcher(FLAGS.user_agent), handler, state_manager,
                 RetryingHandler(LoggingHandler()), crawl_delay)
-    c.crawl(FLAGS.root_url)
+    c.crawl([FLAGS.root_url])
 
 
 if __name__ == '__main__':
