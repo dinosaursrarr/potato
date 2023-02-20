@@ -72,10 +72,10 @@ class Crawler:
         while not self.state_manager.is_finished():
             url = self.state_manager.pop_next()
             time.sleep(self.crawl_delay.total_seconds())
+            print(f'Processing url: {url}')
             try:
                 content = self.fetcher.fetch(url)
                 self.handler.handle(content, url, self._enqueue_fn())
+                self.state_manager.mark_completed(url)
             except Exception as e:
                 self.error_handler.handle(e, self._retry_fn(url))
-            finally:
-                self.state_manager.mark_completed(url)

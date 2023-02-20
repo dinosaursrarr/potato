@@ -1,5 +1,6 @@
 import datetime
 import pathlib
+import queue
 
 from absl import app
 from absl import flags
@@ -15,6 +16,8 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string('root_url', 'https://www.europotato.org/varieties/index', 'Root URL.')
 flags.DEFINE_string('state_root', '', 'Path to directory used to manage queue state.')
 flags.DEFINE_string('output_root', '', 'Path to write output files under.')
+flags.DEFINE_string('user_agent', 'http://github.com/dinosaursrarr/potato/europotato', 'User agent to report when '
+                                                                                       'fetching pages.')
 flags.DEFINE_integer('crawl_delay_seconds', 60, 'How long to delay between pages, in seconds.', lower_bound=0)
 
 
@@ -28,10 +31,12 @@ def main(argv):
     state_root = pathlib.Path(FLAGS.state_root)
 
     handler = Handler(pathlib.Path(FLAGS.output_root))
-    state_manager = FileStateManager(state_root / "europotato_visited.log", state_root / "europotato_queue.log")
+    state_manager = FileStateManager(queue.Queue, state_root / "europotato_visited.log", state_root /
+                                     "europotato_queue.log")
     crawl_delay = datetime.timedelta(seconds=FLAGS.crawl_delay_seconds)
 
-    c = Crawler(HttpFetcher(), handler, state_manager, LoggingHandler(), crawl_delay)
+    c = Crawler(HttpFetcher(FLAGS.user_agent), handler, state_manager,
+                LoggingHandler(), crawl_delay)
     c.crawl(FLAGS.root_url)
 
 
