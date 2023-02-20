@@ -73,6 +73,29 @@ def test_cannot_enqueue_already_visited(tmp_path):
     assert m.pop_next() == 'c'
 
 
+def test_cannot_enqueue_already_in_queue(tmp_path):
+    queue_path = tmp_path / "queue.log"
+    m = FileStateManager(queue.Queue, tmp_path / "visited.log", queue_path)
+    m.enqueue('a')
+    m.enqueue('b')
+    m.enqueue('a')
+
+    with open(queue_path, 'r') as f:
+        assert f.read().splitlines() == ['a', 'b']
+
+
+def test_cannot_enqueue_in_progress_page(tmp_path):
+    queue_path = tmp_path / "queue.log"
+    m = FileStateManager(queue.Queue, tmp_path / "visited.log", queue_path)
+    m.enqueue('a')
+    assert m.pop_next() == 'a'
+    m.enqueue('a')
+    m.mark_completed('a')
+
+    with open(queue_path, 'r') as f:
+        assert f.read().splitlines() == []
+
+
 def test_write_visited_log(tmp_path):
     log_path = tmp_path / "visited.log"
     m = FileStateManager(queue.Queue, log_path, tmp_path / "queue.log")

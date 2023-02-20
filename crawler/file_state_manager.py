@@ -13,6 +13,7 @@ class FileStateManager(StateManager):
     def __init__(self, queue_type: type[queue.Queue], visited_path: pathlib.Path, queue_path: pathlib.Path):
         self._visited = set()
         self._queue = queue_type()
+        self._in_progress = set()
 
         try:
             self._visited_file = open(visited_path, 'r+')
@@ -24,6 +25,7 @@ class FileStateManager(StateManager):
         try:
             self._queue_file = open(queue_path, 'r+')
             for url in self._queue_file.read().splitlines():
+                self._in_progress.add(url)
                 self._queue.put(url)
         except FileNotFoundError:
             print(f'No existing queue file at {queue_path}')
@@ -35,6 +37,9 @@ class FileStateManager(StateManager):
     def enqueue(self, url: str) -> None:
         if url in self._visited:
             return
+        if url in self._in_progress:
+            return
+        self._in_progress.add(url)
         self._queue.put(url)
         self._queue_file.write(f'{url}\n')
         self._queue_file.flush()
@@ -46,6 +51,12 @@ class FileStateManager(StateManager):
             raise IndexError('Cannot pop from empty queue')
 
     def mark_completed(self, url: str) -> None:
+        # We know we're finished with it. We do this here, and not
+        # on popping, since otherwise a page can re-enqueue itself while
+        # it is not on the queue, but before it has been marked visited.
+        # Duplicate effort is bad.
+        self._in_progress.discard(url)
+
         # Make sure we don't visit completed URL again.
         self._visited.add(url)
         self._visited_file.write(f'{url}\n')
