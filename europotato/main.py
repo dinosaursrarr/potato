@@ -6,7 +6,7 @@ from absl import app
 from absl import flags
 
 from crawler.crawler import Crawler
-from crawler.error_handler import LoggingHandler
+from crawler.error_handler import LoggingHandler, RetryingHandler
 from crawler.file_state_manager import FileStateManager
 from crawler.http_fetcher import HttpFetcher
 from europotato.router import Handler
@@ -36,7 +36,7 @@ def main(argv):
     crawl_delay = datetime.timedelta(seconds=FLAGS.crawl_delay_seconds)
 
     c = Crawler(HttpFetcher(FLAGS.user_agent), handler, state_manager,
-                LoggingHandler(), crawl_delay)
+                RetryingHandler(LoggingHandler()), crawl_delay)
     c.crawl(FLAGS.root_url)
 
 
