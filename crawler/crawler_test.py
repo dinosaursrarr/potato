@@ -1,12 +1,12 @@
 import datetime
 import queue
 import time
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, Set
 
 import pytest
 
 from .crawler import Crawler
-from .error_handler import ThrowingHandler
+from .error_handler import LoggingHandler, ThrowingHandler, RetryingHandler
 from .fetcher import Fetcher
 from .handler import Handler
 from .state_manager import StateManager
@@ -32,17 +32,24 @@ class FakeHandler(Handler):
 
 
 class FakeStateManager(StateManager):
-    def __init__(self, queue_type = queue.Queue):
+    def __init__(self, queue_type=queue.Queue, max_failures: int = 3):
         self.queue = queue_type()
+        self.failed: Set[str, int] = {}
+        self.max_failures = max_failures
 
     def is_finished(self) -> bool:
         return self.queue.qsize() == 0
 
     def enqueue(self, url: str) -> None:
+        if self.failed.get(url, 0) >= self.max_failures:
+            return
         self.queue.put_nowait(url)
 
     def pop_next(self) -> str:
         return self.queue.get_nowait()
+
+    def mark_failed(self, url: str) -> None:
+        self.failed[url] = self.failed.get(url, 0) + 1
 
     def mark_completed(self, url: str) -> None:
         pass
@@ -159,3 +166,37 @@ def test_error_handling():
 
     with pytest.raises(ValueError, match='bar'):
         Crawler(f, FakeHandler(handle), FakeStateManager(), ThrowingHandler()).crawl('root')
+
+
+class EventualFetcher(Fetcher):
+    def __init__(self, failures: int):
+        self.counter = 0
+        self.failures = failures
+
+    def fetch(self, url: str) -> str:
+        self.counter += 1
+        if self.counter == self.failures:
+            return 'foo'
+        raise ValueError('oh no')
+
+
+def test_retry_failures():
+    processed = []
+    h = FakeHandler(lambda content, url, callback: processed.append(f'{url}: {content}'))
+    f = EventualFetcher(failures=3)
+    m = FakeStateManager(max_failures=3)
+
+    Crawler(f, h, m, RetryingHandler(LoggingHandler())).crawl('root')
+
+    assert processed == ['root: foo']
+
+
+def test_exhaust_failures():
+    processed = []
+    h = FakeHandler(lambda content, url, callback: processed.append(f'{url}: {content}'))
+    f = EventualFetcher(failures=2)
+    m = FakeStateManager(max_failures=1)
+
+    Crawler(f, h, m, RetryingHandler(LoggingHandler())).crawl('root')
+
+    assert processed == []

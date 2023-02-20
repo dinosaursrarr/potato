@@ -64,6 +64,8 @@ def test_enqueue_and_pop_lifo(tmp_path):
 
 def test_cannot_enqueue_already_visited(tmp_path):
     m = FileStateManager(queue.Queue, tmp_path / "visited.log", tmp_path / "queue.log")
+    m.enqueue('a')
+    m.pop_next()
     m.mark_completed('a')
     m.enqueue('a')
     m.enqueue('b')
@@ -96,16 +98,43 @@ def test_cannot_enqueue_in_progress_page(tmp_path):
         assert f.read().splitlines() == []
 
 
+def test_can_enqueue_after_failure(tmp_path):
+    queue_path = tmp_path / "queue.log"
+    m = FileStateManager(queue.Queue, tmp_path / "visited.log", queue_path, max_failures_per_url=2)
+    m.enqueue('a')
+    m.pop_next()
+    m.mark_failed('a')
+    m.enqueue('a')
+
+    assert m.pop_next() == 'a'
+
+
+def test_cannot_enqueue_after_too_many_failures(tmp_path):
+    queue_path = tmp_path / "queue.log"
+    m = FileStateManager(queue.Queue, tmp_path / "visited.log", queue_path, max_failures_per_url=1)
+    m.enqueue('a')
+    m.pop_next()
+    m.mark_failed('a')
+
+    m.enqueue('a')
+    with pytest.raises(IndexError, match='empty queue'):
+        m.pop_next()
+
+
 def test_write_visited_log(tmp_path):
     log_path = tmp_path / "visited.log"
     m = FileStateManager(queue.Queue, log_path, tmp_path / "queue.log")
     with open(log_path, 'r') as f:
         assert f.read().splitlines() == []
 
+    m.enqueue('a')
+    m.pop_next()
     m.mark_completed('a')
     with open(log_path, 'r') as f:
         assert f.read().splitlines() == ['a']
 
+    m.enqueue('b')
+    m.pop_next()
     m.mark_completed('b')
     with open(log_path, 'r') as f:
         assert f.read().splitlines() == ['a', 'b']

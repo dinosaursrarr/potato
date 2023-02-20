@@ -78,4 +78,5 @@ class Crawler:
                 self.handler.handle(content, url, self._enqueue_fn())
                 self.state_manager.mark_completed(url)
             except Exception as e:
+                self.state_manager.mark_failed(url)
                 self.error_handler.handle(e, self._retry_fn(url))

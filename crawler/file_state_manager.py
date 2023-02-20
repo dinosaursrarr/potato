@@ -1,5 +1,6 @@
 import pathlib
 import queue
+from typing import Dict, Set
 
 from .state_manager import StateManager
 
@@ -10,10 +11,13 @@ class FileStateManager(StateManager):
     log files with one URL per line. This allows resuming the crawl if interrupted.
     """
 
-    def __init__(self, queue_type: type[queue.Queue], visited_path: pathlib.Path, queue_path: pathlib.Path):
-        self._visited = set()
+    def __init__(self, queue_type: type[queue.Queue], visited_path: pathlib.Path, queue_path: pathlib.Path,
+                 max_failures_per_url: int = 3):
+        self._visited: Set[str] = set()
         self._queue = queue_type()
-        self._in_progress = set()
+        self._in_progress: Set[str] = set()
+        self._failed: Dict[str, int] = {}
+        self._max_failures_per_url = max_failures_per_url
 
         try:
             self._visited_file = open(visited_path, 'r+')
@@ -39,6 +43,8 @@ class FileStateManager(StateManager):
             return
         if url in self._in_progress:
             return
+        if self._failed.get(url, 0) >= self._max_failures_per_url:
+            return
         self._in_progress.add(url)
         self._queue.put(url)
         self._queue_file.write(f'{url}\n')
@@ -50,7 +56,17 @@ class FileStateManager(StateManager):
         except queue.Empty:
             raise IndexError('Cannot pop from empty queue')
 
+    def mark_failed(self, url) -> None:
+        if url not in self._in_progress:
+            return
+
+        self._in_progress.discard(url)
+        self._failed[url] = self._failed.get(url, 0) + 1
+
     def mark_completed(self, url: str) -> None:
+        if url not in self._in_progress:
+            return
+
         # We know we're finished with it. We do this here, and not
         # on popping, since otherwise a page can re-enqueue itself while
         # it is not on the queue, but before it has been marked visited.
