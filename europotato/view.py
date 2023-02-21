@@ -9,6 +9,11 @@ from crawler import handler
 
 
 class Handler(handler.Handler):
+    """
+    Handles detail pages from europotato.org. These contain details about a given
+    variety of potato. Data is written as json to files named for the url.
+    """
+
     def __init__(self, output_root: pathlib.Path):
         self.output_root = output_root
 
@@ -67,11 +72,6 @@ class Handler(handler.Handler):
         for ul in doc.findAll('ul', class_='nav-tabs'):
             results.extend([a['href'] for a in ul.findAll('a')])
         return results
-
-    """
-    Handles detail pages from europotato.org. These contain details about a given
-    variety of potato. Data is written as json to files named for the url. 
-    """
 
     def handle(self, content: str, url: str, enqueue_callback: Callable[[str, str], None]) -> None:
         # Collect information in a dict, which we will dump to JSON.
