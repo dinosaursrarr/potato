@@ -9,6 +9,7 @@ class StateManager(abc.ABC):
      - pop_next() when it is time to be crawled.
      - mark_completed() after it has been crawled.
     """
+
     def is_finished(self) -> bool:
         """
         Lets us know when all the work is finished.
