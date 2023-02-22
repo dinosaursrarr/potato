@@ -33,8 +33,11 @@ def main(argv):
     state_root = pathlib.Path(FLAGS.state_root)
 
     handler = Handler(pathlib.Path(FLAGS.output_root))
-    state_manager = FileStateManager(queue.Queue, state_root / "europotato_visited.log", state_root /
-                                     "europotato_queue.log", FLAGS.max_failures_per_url)
+    state_manager = FileStateManager(queue.Queue,
+                                     state_root / "europotato_visited.log",
+                                     state_root / "europotato_queue.log",
+                                     state_root / "europotato_counter.log",
+                                     FLAGS.max_failures_per_url)
     crawl_delay = datetime.timedelta(seconds=FLAGS.crawl_delay_seconds)
 
     c = Crawler(HttpFetcher(FLAGS.user_agent), handler, state_manager,
