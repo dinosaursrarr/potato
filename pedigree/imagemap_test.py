@@ -7,6 +7,19 @@ def noop_callback(current_url: str, new_url: str) -> None:
     pass
 
 
+def test_include_url(tmp_path):
+    content = open('pedigree/imagemap.html').read()
+    url = 'https://www.plantbreeding.wur.nl/PotatoPedigree/pedigree_imagemap.php?id=2602&depth=8&showjaar=0'
+    output_dir = tmp_path / "name"
+    output_dir.mkdir()
+
+    Handler(output_dir).handle(content, url, noop_callback)
+
+    with open(output_dir / "2602.json") as f:
+        result = json.load(f)
+        assert result['url'] == url
+
+
 def test_extract_name(tmp_path):
     content = open('pedigree/imagemap.html').read()
     url = 'https://www.plantbreeding.wur.nl/PotatoPedigree/pedigree_imagemap.php?id=2602&depth=8&showjaar=0'

@@ -15,7 +15,7 @@ class Handler(handler.Handler):
 
     def handle(self, content: str, url: str, enqueue_callback: Callable[[str, str], None]) -> None:
         if url.startswith('https://www.plantbreeding.wur.nl/PotatoPedigree/multilookup.php'):
-            search.Handler().handle(content, url, enqueue_callback)
+            search.Handler(self.output_root).handle(content, url, enqueue_callback)
             return
         if url.startswith('https://www.plantbreeding.wur.nl/PotatoPedigree/pedigree_imagemap.php?id='):
             imagemap.Handler(self.output_root).handle(content, url, enqueue_callback)
