@@ -1,14 +1,13 @@
 import datetime
 import pathlib
-import queue
 
 from absl import app
 from absl import flags
 
 from crawler.crawler import Crawler
 from crawler.error_handler import LoggingHandler, RetryingHandler
-from crawler.file_state_manager import FileStateManager
 from crawler.http_fetcher import HttpFetcher
+from crawler.sqlite_state_manager import SqlStateManager
 from europotato.router import Handler
 
 FLAGS = flags.FLAGS
@@ -33,11 +32,8 @@ def main(argv):
     state_root = pathlib.Path(FLAGS.state_root)
 
     handler = Handler(pathlib.Path(FLAGS.output_root))
-    state_manager = FileStateManager(queue.Queue,
-                                     state_root / "europotato_visited.log",
-                                     state_root / "europotato_queue.log",
-                                     state_root / "europotato_counter.log",
-                                     FLAGS.max_failures_per_url)
+    state_manager = SqlStateManager(state_root / 'europotato.db',
+                                    max_failures_per_url=FLAGS.max_failures_per_url)
     crawl_delay = datetime.timedelta(seconds=FLAGS.crawl_delay_seconds)
 
     c = Crawler(HttpFetcher(FLAGS.user_agent), handler, state_manager,

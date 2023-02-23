@@ -7,7 +7,7 @@ from absl import flags
 
 from crawler.crawler import Crawler
 from crawler.error_handler import LoggingHandler, RetryingHandler
-from crawler.file_state_manager import FileStateManager
+from crawler.sqlite_state_manager import SqlStateManager
 from crawler.http_fetcher import HttpFetcher
 from pedigree.router import Handler
 
@@ -34,11 +34,8 @@ def main(argv):
     state_root = pathlib.Path(FLAGS.state_root)
 
     handler = Handler(pathlib.Path(FLAGS.output_root))
-    state_manager = FileStateManager(queue.Queue,
-                                     state_root / "pedigree_visited.log",
-                                     state_root / "pedigree_queue.log",
-                                     state_root / "pedigree_counter.log",
-                                     FLAGS.max_failures_per_url)
+    state_manager = SqlStateManager(state_root / 'pedigree.db',
+                                    max_failures_per_url=FLAGS.max_failures_per_url)
     crawl_delay = datetime.timedelta(seconds=FLAGS.crawl_delay_seconds)
 
     c = Crawler(HttpFetcher(FLAGS.user_agent), handler, state_manager,
