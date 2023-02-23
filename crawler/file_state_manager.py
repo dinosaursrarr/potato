@@ -1,6 +1,6 @@
 import pathlib
 import queue
-from typing import Dict, Set
+from typing import Dict, Optional, Set
 
 from .state_manager import StateManager
 
@@ -20,7 +20,7 @@ class FileStateManager(StateManager):
         self._visited: Set[str] = set()
         self._queue = queue_type()
         self._queue_counter: int = 0
-        self._in_progress: Set[str] = set()
+        self._in_progress: Optional[str] = None
         self._failed: Dict[str, int] = {}
         self._max_failures_per_url = max_failures_per_url
 
@@ -42,8 +42,9 @@ class FileStateManager(StateManager):
 
         try:
             self._queue_file = open(queue_path, 'r+')
-            for url in self._queue_file.read().splitlines()[self._queue_counter:]:
-                self._in_progress.add(url)
+            queue_lines = self._queue_file.read().splitlines()[self._queue_counter:]
+            self._in_progress = queue_lines[0]
+            for url in queue_lines:
                 self._queue.put(url)
         except FileNotFoundError:
             print(f'No existing queue file at {queue_path}')
@@ -62,38 +63,41 @@ class FileStateManager(StateManager):
     def enqueue(self, url: str) -> None:
         if url in self._visited:
             return
-        if url in self._in_progress:
+        if url == self._in_progress:
+            return
+        if url in self._queue.queue:
             return
         if self._failed.get(url, 0) >= self._max_failures_per_url:
             return
-        self._in_progress.add(url)
         self._queue.put(url)
         self._queue_file.write(f'{url}\n')
         self._queue_file.flush()
 
     def pop_next(self) -> str:
         try:
-            return self._queue.get_nowait()
+            url = self._queue.get_nowait()
+            self._in_progress = url
+            return url
         except queue.Empty:
             raise IndexError('Cannot pop from empty queue')
 
     def mark_failed(self, url) -> None:
-        if url not in self._in_progress:
+        if url != self._in_progress:
             return
 
-        self._in_progress.discard(url)
+        self._in_progress = None
         self._failed[url] = self._failed.get(url, 0) + 1
         self._update_counter()
 
     def mark_completed(self, url: str) -> None:
-        if url not in self._in_progress:
+        if url != self._in_progress:
             return
 
         # We know we're finished with it. We do this here, and not
         # on popping, since otherwise a page can re-enqueue itself while
         # it is not on the queue, but before it has been marked visited.
         # Duplicate effort is bad.
-        self._in_progress.discard(url)
+        self._in_progress = None
 
         # Make sure we don't visit completed URL again.
         self._visited.add(url)
