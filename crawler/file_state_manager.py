@@ -43,7 +43,7 @@ class FileStateManager(StateManager):
         try:
             self._queue_file = open(queue_path, 'r+')
             queue_lines = self._queue_file.read().splitlines()[self._queue_counter:]
-            self._in_progress = queue_lines[0]
+            self._in_progress = next(iter(queue_lines), None)
             for url in queue_lines:
                 self._queue.put(url)
         except FileNotFoundError:
