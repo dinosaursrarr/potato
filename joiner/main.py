@@ -23,9 +23,9 @@ def main(argv):
     pedigree_root = pathlib.Path(FLAGS.pedigree_root)
     output_root = pathlib.Path(FLAGS.output_root)
 
-    europotato_e = JsonLoader(europotato_root, lambda x: x[-2:] == '-E').load()
-    europotato_p = JsonLoader(europotato_root, lambda x: x[-2:] == '-P').load()
-    pedigree = JsonLoader(pedigree_root, lambda x: x.isnumeric()).load()
+    europotato_e = JsonLoader(europotato_root, lambda j,n: j["name"], lambda x: x[-2:] == '-E').load()
+    europotato_p = JsonLoader(europotato_root, lambda j,n: j["name"], lambda x: x[-2:] == '-P').load()
+    pedigree = JsonLoader(pedigree_root, lambda j,n: j["name"], lambda x: x.isnumeric()).load()
     name_map = json.load(open(pedigree_root / 'europotato_names.json'))
 
 if __name__ == '__main__':

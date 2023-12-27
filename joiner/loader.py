@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import json
 import natsort
@@ -14,13 +14,16 @@ class JsonLoader:
 
     def __init__(self,
                  path: pathlib.Path,
-                 filter: Optional[Callable[[str], bool]] = None):
+                 key_fn: Callable[[Union[dict, list], str], str],
+                 filter_fn: Optional[Callable[[str], bool]] = None):
         """
         path: path to directory containing numbered JSON files.
-        filter: optional predicate returning true if base filename should be loaded.
+        key_fn: function indicating how to extract a key for each entry from either the JSON or filename.
+        filter_fn: optional predicate returning true if base filename should be loaded.
         """
         self.path = path
-        self.filter = filter
+        self.key_fn = key_fn
+        self.filter_fn = filter_fn
 
     def load(self):
         """
@@ -31,8 +34,9 @@ class JsonLoader:
         for filename in natsort.natsorted(os.listdir(self.path)):
             if not filename[-5:] == '.json':
                 continue
-            id = filename[:-5]
-            if self.filter is not None and not self.filter(id):
+            if self.filter_fn is not None and not self.filter_fn(filename):
                 continue
-            results[id] = json.load(open(self.path / filename))
+            j = json.load(open(self.path / filename))
+            key = self.key_fn(j, filename)
+            results[key] = j
         return results
