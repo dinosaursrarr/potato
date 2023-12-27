@@ -23,6 +23,7 @@ itsdangerous==2.1.2
 Jinja2==3.1.2
 MarkupSafe==2.1.2
 mock==5.0.1
+natsort==8.4.0
 packaging==23.0
 path==16.6.0
 path.py==12.5.0
