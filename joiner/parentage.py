@@ -9,6 +9,10 @@ _PARENTAGE = "parentage"
 
 
 class ParentageExtractor(Extractor):
+    """
+    Extract details of which breeds are parents and children of other breeds according
+    to the Potato Pedigree database.
+    """
     def __init__(self, pedigrees: List[Dict[str, object]]):
         self.pedigrees = pedigrees
 
@@ -87,10 +91,6 @@ class ParentageExtractor(Extractor):
 
 
     def extract(self) -> Dict[str, List[Signal]]:
-        """
-        Extract details of which breeds are parents and children of other breeds according
-        to the Potato Pedigree database.
-        """
         result = {}
         for pedigree in self.pedigrees:
             res = self._extract_parents(pedigree)

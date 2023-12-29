@@ -8,14 +8,14 @@ _YEAR = "year_of_introduction"
 
 
 class IntroductionExtractor(Extractor):
+    """
+    Extract details of the year each variety was introducted, according to the Potato
+    Pedigree database.
+    """
     def __init__(self, pedigrees: List[Dict[str, object]]):
         self.pedigrees = pedigrees
 
     def extract(self) -> Dict[str, List[Signal]]:
-        """
-        Extract details of the year each variety was introducted, according to the Potato
-        Pedigree database.
-        """
         years: Dict[str, int] = {}
         for pedigree in self.pedigrees:
             if _PARENTAGE not in pedigree:
