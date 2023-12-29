@@ -8,6 +8,8 @@ class SignalName(Enum):
     PARENT_OF = 1
     CHILD_OF = 2
     YEAR_OF_INTRODUCTION = 3
+    PEDIGREE_NAME = 4
+    EUROPOTATO_NAME = 5
 
 
 class Signal(NamedTuple):
