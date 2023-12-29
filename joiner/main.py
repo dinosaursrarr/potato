@@ -3,14 +3,21 @@ import pathlib
 
 from absl import app
 from absl import flags
+from enum import Enum
 
 from joiner.loader import JsonLoader
+from joiner.parentage import ParentageExtractor
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('europotato_root', '', 'Path to read europotato crawler json output from.')
 flags.DEFINE_string('pedigree_root', '', 'Path to read potato pedigree crawler json output from.')
 flags.DEFINE_string('output_root', '', 'Path to write output files under.')
+
+
+class SignalName(Enum):
+    PEDIGREE_IMAGEMAP = 1
+
 
 def main(argv):
     if not FLAGS.europotato_root:
@@ -23,10 +30,17 @@ def main(argv):
     pedigree_root = pathlib.Path(FLAGS.pedigree_root)
     output_root = pathlib.Path(FLAGS.output_root)
 
-    europotato_e = JsonLoader(europotato_root, lambda j,n: j["name"], lambda x: x[-2:] == '-E').load()
-    europotato_p = JsonLoader(europotato_root, lambda j,n: j["name"], lambda x: x[-2:] == '-P').load()
-    pedigree = JsonLoader(pedigree_root, lambda j,n: j["name"], lambda x: x.isnumeric()).load()
-    name_map = json.load(open(pedigree_root / 'europotato_names.json'))
+    # europotato_e = JsonLoader(europotato_root, lambda j,n: j["name"], lambda x: x[-7:-5] == '-E').load()
+    # europotato_p = JsonLoader(europotato_root, lambda j,n: j["name"], lambda x: x[-7:-5] == '-P').load()
+    pedigree = JsonLoader(pedigree_root, lambda j,n: n[:-5], lambda x: x[:-5].isnumeric()).load()
+    # name_map = json.load(open(pedigree_root / 'europotato_names.json'))
+
+    extractors = [
+        ParentageExtractor(pedigree.values()),
+    ]
+    for extractor in extractors:
+        signals = extractor.extract()
+
 
 if __name__ == '__main__':
     app.run(main)

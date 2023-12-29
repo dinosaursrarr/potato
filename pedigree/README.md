@@ -1,4 +1,4 @@
-This folder contains code for crawling Potato Pedigree Database, which is hosted by the Laboratory of Plant Breeding at
+This folder contains code for crawling the Potato Pedigree Database, which is hosted by the Laboratory of Plant Breeding at
 Wageningen University & Research.
 
 The database is described by this paper:
