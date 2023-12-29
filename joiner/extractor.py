@@ -7,6 +7,7 @@ from typing import Dict, List, NamedTuple, Union
 class SignalName(Enum):
     PARENT_OF = 1
     CHILD_OF = 2
+    YEAR_OF_INTRODUCTION = 3
 
 
 class Signal(NamedTuple):

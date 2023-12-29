@@ -5,6 +5,7 @@ from absl import app
 from absl import flags
 from enum import Enum
 
+from joiner.introduction import IntroductionExtractor
 from joiner.loader import JsonLoader
 from joiner.parentage import ParentageExtractor
 
@@ -37,6 +38,7 @@ def main(argv):
 
     extractors = [
         ParentageExtractor(pedigree.values()),
+        IntroductionExtractor(pedigree.values()),
     ]
     for extractor in extractors:
         signals = extractor.extract()
