@@ -4,6 +4,16 @@ from enum import Enum
 from typing import Dict, List, NamedTuple, Union
 
 
+class Namespace(Enum):
+    EUROPOTATO = 1
+    PEDIGREE = 2
+
+
+class Name(NamedTuple):
+    name: str
+    namespace: Namespace
+
+
 class SignalName(Enum):
     PARENT_OF = 1
     CHILD_OF = 2
@@ -23,7 +33,7 @@ class Extractor(abc.ABC):
     """
 
     @abc.abstractmethod
-    def extract(self) -> Dict[str, List[Signal]]:
+    def extract(self) -> Dict[Name, List[Signal]]:
         """
         :return: Dictionary with value of a given signal for each entity.
         """

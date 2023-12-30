@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from .extractor import Extractor, Signal, SignalName
+from .extractor import Extractor, Name, Namespace, Signal, SignalName
 
 _NAME = "name"
 
@@ -12,9 +12,9 @@ class PedigreeNameExtractor(Extractor):
     def __init__(self, pedigrees: List[Dict[str, object]]):
         self.pedigrees = pedigrees
 
-    def extract(self) -> Dict[str, List[Signal]]:
+    def extract(self) -> Dict[Name, List[Signal]]:
         return {
-            p[_NAME]: [Signal(SignalName.PEDIGREE_NAME, p[_NAME])]
+            Name(p[_NAME], Namespace.PEDIGREE): [Signal(SignalName.PEDIGREE_NAME, p[_NAME])]
             for p in self.pedigrees if _NAME in p
         }
 
@@ -31,7 +31,7 @@ class EuropotatoPedigreeNameExtractor(Extractor):
         self.pedigrees = pedigrees
         self.name_map = name_map
 
-    def extract(self) -> Dict[str, List[Signal]]:
+    def extract(self) -> Dict[Name, List[Signal]]:
         results = {}
         for filename, europotato_name in self.name_map.items():
             if not europotato_name:
@@ -42,7 +42,7 @@ class EuropotatoPedigreeNameExtractor(Extractor):
             pedigree_name = pedigree.get(_NAME)
             if not pedigree_name:
                 continue
-            results[pedigree_name] = [
+            results[Name(pedigree_name, Namespace.PEDIGREE)] = [
                 Signal(SignalName.EUROPOTATO_NAME, europotato_name)
             ]
         return results

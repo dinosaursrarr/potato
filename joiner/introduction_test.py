@@ -1,7 +1,7 @@
 import json
 import pytest
 
-from .extractor import Signal, SignalName
+from .extractor import Name, Namespace, Signal, SignalName
 from .introduction import IntroductionExtractor
 
 
@@ -29,10 +29,10 @@ def test_extract_years():
     extractor = IntroductionExtractor([pedigree])
 
     assert sorted(extractor.extract()) == sorted({
-        "bar": [
+        Name("bar", Namespace.PEDIGREE): [
             Signal(SignalName.YEAR_OF_INTRODUCTION, 1903),
         ],
-        "baz": [
+        Name("baz", Namespace.PEDIGREE): [
             Signal(SignalName.YEAR_OF_INTRODUCTION, 2023),
         ],
     })
@@ -72,13 +72,13 @@ def test_dedupe():
     extractor = IntroductionExtractor([pedigree1, pedigree2])
 
     assert sorted(extractor.extract()) == sorted({
-        "bar": [
+        Name("bar", Namespace.PEDIGREE): [
             Signal(SignalName.YEAR_OF_INTRODUCTION, 1903),
         ],
-        "baz": [
+        Name("baz", Namespace.PEDIGREE): [
             Signal(SignalName.YEAR_OF_INTRODUCTION, 2023),
         ],
-        "yay": [
+        Name("yay", Namespace.PEDIGREE): [
             Signal(SignalName.YEAR_OF_INTRODUCTION, 1979),
         ]
     })

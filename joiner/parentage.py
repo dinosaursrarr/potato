@@ -1,6 +1,6 @@
 from typing import Dict, List, Set
 
-from .extractor import Extractor, Signal, SignalName
+from .extractor import Extractor, Name, Namespace, Signal, SignalName
 
 
 _COORDINATES = "coordinates"
@@ -44,12 +44,14 @@ class ParentageExtractor(Extractor):
                 continue
             if parent.name == 'unknown':
                 continue
-            if parent.name not in results:
-                results[parent.name] = []
-            results[parent.name].append(Signal(SignalName.PARENT_OF, root.name))
-            if root.name not in results:
-                results[root.name] = []
-            results[root.name].append(Signal(SignalName.CHILD_OF, parent.name))
+            parent_name = Name(parent.name, Namespace.PEDIGREE)
+            if parent_name not in results:
+                results[parent_name] = []
+            results[parent_name].append(Signal(SignalName.PARENT_OF, root.name))
+            root_name = Name(root.name, Namespace.PEDIGREE)
+            if root_name not in results:
+                results[root_name] = []
+            results[root_name].append(Signal(SignalName.CHILD_OF, parent.name))
             self._dfs(coords, parent, next_x, next_y, y_diff // 2, x_offset, results)
 
 
@@ -90,7 +92,7 @@ class ParentageExtractor(Extractor):
         return result
 
 
-    def extract(self) -> Dict[str, List[Signal]]:
+    def extract(self) -> Dict[Name, List[Signal]]:
         result = {}
         for pedigree in self.pedigrees:
             res = self._extract_parents(pedigree)

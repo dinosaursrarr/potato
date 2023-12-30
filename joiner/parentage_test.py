@@ -1,7 +1,7 @@
 import json
 import pytest
 
-from .extractor import Signal, SignalName
+from .extractor import Name, Namespace, Signal, SignalName
 from .parentage import ParentageExtractor
 
 
@@ -62,30 +62,30 @@ def test_reconstruct_tree():
     extractor = ParentageExtractor([pedigree])
 
     assert sorted(extractor.extract()) == sorted({
-        "foo": [
+        Name("foo", Namespace.PEDIGREE): [
             Signal(SignalName.CHILD_OF, "woo"),
             Signal(SignalName.CHILD_OF, "yay")
         ],
-        "woo": [
+        Name("woo", Namespace.PEDIGREE): [
             Signal(SignalName.PARENT_OF, "foo"),
             Signal(SignalName.CHILD_OF, "houpla"),
             Signal(SignalName.CHILD_OF, "panowie")
         ],
-        "houpla": [
+        Name("houpla", Namespace.PEDIGREE): [
             Signal(SignalName.PARENT_OF, "woo")
         ],
-        "panowie": [
+        Name("panowie", Namespace.PEDIGREE): [
             Signal(SignalName.PARENT_OF, "woo")
         ],
-        "yay": [
+        Name("yay", Namespace.PEDIGREE): [
             Signal(SignalName.PARENT_OF, "foo"),
             Signal(SignalName.CHILD_OF, "moo"),
             Signal(SignalName.CHILD_OF, "baa")
         ],
-        "moo": [
+        Name("moo", Namespace.PEDIGREE): [
             Signal(SignalName.PARENT_OF, "yay")
         ],
-        "baa": [
+        Name("baa", Namespace.PEDIGREE): [
             Signal(SignalName.PARENT_OF, "yay")
         ],
     })
@@ -145,18 +145,18 @@ def test_dedupe_results():
     extractor = ParentageExtractor([pedigree1, pedigree2])
 
     assert sorted(extractor.extract()) == sorted({
-        "foo": [
+        Name("foo", Namespace.PEDIGREE): [
             Signal(SignalName.CHILD_OF, "woo"),
         ],
-        "woo": [
+        Name("woo", Namespace.PEDIGREE): [
             Signal(SignalName.PARENT_OF, "foo"),
             Signal(SignalName.CHILD_OF, "houpla")
         ],
-        "houpla": [
+        Name("houpla", Namespace.PEDIGREE): [
             Signal(SignalName.PARENT_OF, "woo"),
             Signal(SignalName.CHILD_OF, "yay")
         ],
-        "yay": [
+        Name("yay", Namespace.PEDIGREE): [
             Signal(SignalName.PARENT_OF, "houpla")
         ],
     })
@@ -403,10 +403,10 @@ def test_ignore_entry_with_3_coords():
     extractor = ParentageExtractor([pedigree])
 
     assert sorted(extractor.extract()) == sorted({
-        "foo": [
+        Name("foo", Namespace.PEDIGREE): [
             Signal(SignalName.CHILD_OF, "woo"),
         ],
-        "woo": [
+        Name("woo", Namespace.PEDIGREE): [
             Signal(SignalName.PARENT_OF, "foo"),
         ],
     })
@@ -441,10 +441,10 @@ def test_ignore_entry_with_5_coords():
     extractor = ParentageExtractor([pedigree])
 
     assert sorted(extractor.extract()) == sorted({
-        "foo": [
+        Name("foo", Namespace.PEDIGREE): [
             Signal(SignalName.CHILD_OF, "woo"),
         ],
-        "woo": [
+        Name("woo", Namespace.PEDIGREE): [
             Signal(SignalName.PARENT_OF, "foo"),
         ],
     })
